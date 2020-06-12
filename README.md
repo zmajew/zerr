@@ -46,3 +46,14 @@ func main() {
 	zerr.Log(err)
 }
 ```
+Result:
+```
+There is no rows with requested id in database
+Error:
+Time: 2020-06-12 11:20:10.664495491 +0200 CEST m=+0.000205396
+sql: no rows in result set
+/main.go 15, main.A
+/main.go 22, main.B
+some error message: /main.go 28, main.C
+/main.go 39, main.main
+```
