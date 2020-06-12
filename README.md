@@ -12,7 +12,7 @@ import (
 	"github.com/zmajew/zerr"
 )
 
-// Function where the error happen
+// Function where the error happened
 func A() error {
 	// Database returned this error on query with fictional id...
 	err := sql.ErrNoRows
@@ -31,6 +31,7 @@ func B() error {
 // Add a comment to the passing error
 func C() error {
 	err := B()
+
 	return zerr.ForwardWithMessage(err, "some error message")
 }
 
@@ -39,7 +40,7 @@ func main() {
 
 	if zerr.GetFirstError(err) == sql.ErrNoRows {
 		// Send the error to the frontend
-		fmt.Println("There is no rows with requested id in database")
+		fmt.Println("There is no rows with requested id in the database")
 	}
 
 	zerr.Log(err)
