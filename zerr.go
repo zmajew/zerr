@@ -10,55 +10,56 @@ import (
 	"github.com/fatih/color"
 )
 
-type EstudyError struct {
+type ZError struct {
 	ErrorLocation string
 	Err           error
 }
 
-func (e *EstudyError) Error() string {
+func (e *ZError) Error() string {
 	return fmt.Sprintf("%s\n%s", e.Err.Error(), e.ErrorLocation)
 }
 
-func Forward(err error) *EstudyError {
+func Forward(err error) *ZError {
 	osPath, _ := os.Getwd()
-	estudy := &EstudyError{}
+	zErr := &ZError{}
 
 	pc := make([]uintptr, 10)
 	runtime.Callers(1, pc)
 	f := runtime.FuncForPC(pc[1] - 1)
 
-	estudy.Err = err
+	zErr.Err = err
 	_, fn, line, _ := runtime.Caller(1)
 	fn = strings.TrimPrefix(fn, osPath)
 	errorLocation := fmt.Sprintf("%s %d, %s", fn, line, f.Name())
-	estudy.ErrorLocation = errorLocation
-	return estudy
+	zErr.ErrorLocation = errorLocation
+
+	return zErr
 }
 
-func ForwardWithMessage(err error, text string) *EstudyError {
+func ForwardWithMessage(err error, text string) *ZError {
 	osPath, _ := os.Getwd()
-	estudy := &EstudyError{}
+	zErr := &ZError{}
 
 	pc := make([]uintptr, 10)
 	runtime.Callers(1, pc)
 	f := runtime.FuncForPC(pc[1] - 1)
 
-	estudy.Err = err
+	zErr.Err = err
 	_, fn, line, _ := runtime.Caller(1)
 	fn = strings.TrimPrefix(fn, osPath)
 	errorLocation := fmt.Sprintf("%s: %s %d, %s", text, fn, line, f.Name())
-	estudy.ErrorLocation = errorLocation
+	zErr.ErrorLocation = errorLocation
 
-	return estudy
+	return zErr
 }
 
-func (c *EstudyError) unwrap() error {
+func (c *ZError) unwrap() error {
 	return c.Err
 }
 
 func GetFirstError(err error) error {
 	for {
-		b, ok := err.(*EstudyError)
+		b, ok := err.(*ZError)
 		if !ok {
 			return err
 		}
