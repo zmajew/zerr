@@ -15,14 +15,14 @@ type ZError struct {
 	Err           error
 }
 
-func (e *ZError) Error() string {
+func (e ZError) Error() string {
 	return fmt.Sprintf("%s\n%s", e.Err.Error(), e.ErrorLocation)
 }
 
-func Forward(err error) *ZError {
+func Forward(err error) error {
 	if err != nil {
 		osPath, _ := os.Getwd()
-		zErr := &ZError{}
+		zErr := ZError{}
 
 		pc := make([]uintptr, 10)
 		runtime.Callers(1, pc)
@@ -40,9 +40,9 @@ func Forward(err error) *ZError {
 	return nil
 }
 
-func ForwardWithMessage(err error, text string) *ZError {
+func ForwardWithMessage(err error, text string) error {
 	osPath, _ := os.Getwd()
-	zErr := &ZError{}
+	zErr := ZError{}
 
 	pc := make([]uintptr, 10)
 	runtime.Callers(1, pc)
