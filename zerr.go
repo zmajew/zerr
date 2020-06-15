@@ -20,20 +20,24 @@ func (e *ZError) Error() string {
 }
 
 func Forward(err error) *ZError {
-	osPath, _ := os.Getwd()
-	zErr := &ZError{}
+	if err != nil {
+		osPath, _ := os.Getwd()
+		zErr := &ZError{}
 
-	pc := make([]uintptr, 10)
-	runtime.Callers(1, pc)
-	f := runtime.FuncForPC(pc[1] - 1)
+		pc := make([]uintptr, 10)
+		runtime.Callers(1, pc)
+		f := runtime.FuncForPC(pc[1] - 1)
 
-	zErr.Err = err
-	_, fn, line, _ := runtime.Caller(1)
-	fn = strings.TrimPrefix(fn, osPath)
-	errorLocation := fmt.Sprintf("%s %d, %s", fn, line, f.Name())
-	zErr.ErrorLocation = errorLocation
+		zErr.Err = err
+		_, fn, line, _ := runtime.Caller(1)
+		fn = strings.TrimPrefix(fn, osPath)
+		errorLocation := fmt.Sprintf("%s %d, %s", fn, line, f.Name())
+		zErr.ErrorLocation = errorLocation
 
-	return zErr
+		return zErr
+	}
+
+	return nil
 }
 
 func ForwardWithMessage(err error, text string) *ZError {
