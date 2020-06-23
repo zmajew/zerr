@@ -63,7 +63,7 @@ func (c *ZError) unwrap() error {
 
 func GetFirstError(err error) error {
 	for {
-		b, ok := err.(*ZError)
+		b, ok := err.(ZError)
 		if !ok {
 			return err
 		}
