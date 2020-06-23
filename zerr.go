@@ -89,7 +89,7 @@ func Log(err error) {
 
 	// Print the message
 	yellError.Printf("Error:\n")
-	fmt.Printf("Time: %s\n", t.String())
+	fmt.Printf("Time: %s\n", t.Format("Mon Jan _2 15:04:05 2006"))
 	fmt.Println(err.Error())
 	fmt.Println(location)
 }
