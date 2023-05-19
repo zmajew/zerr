@@ -71,14 +71,19 @@ func GetFirstError(err error) error {
 	}
 }
 
-func Log(err error) {
+func Log(err error, before ...int) {
+	step := 1
+	if len(before) != 0 {
+		step = before[0]
+	}
+
 	osPath, _ := os.Getwd()
 
 	pc := make([]uintptr, 10)
 	runtime.Callers(1, pc)
 	f := runtime.FuncForPC(pc[1] - 1)
 
-	_, fn, line, _ := runtime.Caller(1)
+	_, fn, line, _ := runtime.Caller(step)
 	fn = strings.TrimPrefix(fn, osPath)
 	location := fmt.Sprintf("%s %d, %s", fn, line, f.Name())
 
