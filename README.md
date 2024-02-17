@@ -37,6 +37,6 @@ func main() {
 }
 ```
 
-I have created this small package like a helper and fund it wary useful since it requires less discipline than logging over the code or introducing distributed tracing, for example Jaeger.
+Have created this small package like a helper and found it wary useful since it requires less discipline than logging over the code or introducing distributed tracing, for example Jaeger.
 
 In local VS Code usage and debugging just ctrl+click on the location links and trace the error.
