@@ -2,99 +2,70 @@ package zerr
 
 import (
 	"fmt"
-	"os"
 	"runtime"
-	"strings"
-	"time"
-
-	"github.com/fatih/color"
 )
 
-type ZError struct {
-	ErrorLocation string
-	Err           error
+type zError struct {
+	stackTrace []string
+	err        error
 }
 
-func (e ZError) Error() string {
-	return fmt.Sprintf("%s\n%s", e.Err.Error(), e.ErrorLocation)
+func (e zError) Error() string {
+	a := "{"
+	b := fmt.Sprintf(`"error": "%s", `, e.err.Error())
+	c := `"stack_trace": [`
+	for i, v := range e.stackTrace {
+		if i == 0 {
+			c = c + v
+			continue
+		}
+		c = c + "," + v
+	}
+	c = c + "]"
+
+	return a + b + c + "}"
 }
 
 func Forward(err error) error {
 	if err != nil {
-		osPath, _ := os.Getwd()
-		zErr := ZError{}
-
 		pc := make([]uintptr, 10)
 		runtime.Callers(1, pc)
 		f := runtime.FuncForPC(pc[1] - 1)
-
-		zErr.Err = err
 		_, fn, line, _ := runtime.Caller(1)
-		fn = strings.TrimPrefix(fn, osPath)
-		errorLocation := fmt.Sprintf("%s %d, %s", fn, line, f.Name())
-		zErr.ErrorLocation = errorLocation
+		errorLocation := fmt.Sprintf(`{"location": "%s:%d", "function": "%s"}`, fn, line, f.Name())
 
-		return zErr
+		zerr, ok := err.(zError)
+		if ok {
+			zerr.stackTrace = append(zerr.stackTrace, errorLocation)
+			return zerr
+		}
+		return zError{
+			err:        err,
+			stackTrace: append(zerr.stackTrace, errorLocation),
+		}
 	}
 
 	return nil
 }
 
-func ForwardWithMessage(err error, text string) error {
-	osPath, _ := os.Getwd()
-	zErr := ZError{}
-
-	pc := make([]uintptr, 10)
-	runtime.Callers(1, pc)
-	f := runtime.FuncForPC(pc[1] - 1)
-
-	zErr.Err = err
-	_, fn, line, _ := runtime.Caller(1)
-	fn = strings.TrimPrefix(fn, osPath)
-	errorLocation := fmt.Sprintf("%s: %s %d, %s", text, fn, line, f.Name())
-	zErr.ErrorLocation = errorLocation
-
-	return zErr
+// Unwrap adds an unwrap standard error functionality.
+func (c zError) Unwrap() error {
+	return c.err
 }
 
-func (c *ZError) unwrap() error {
-	return c.Err
-}
+// WithoutStack looks for first form backwards zError type an returns its encapsulated error.
+// If does not found zError with Unwrap function will return an error from argument.
+func WithoutStack(err error) error {
+	if ze, ok := err.(zError); ok {
+		return ze.err
+	}
 
-func GetFirstError(err error) error {
-	for {
-		b, ok := err.(ZError)
-		if !ok {
+	if x, ok := err.(interface{ Unwrap() error }); ok {
+		if _, ok := err.(zError); !ok {
 			return err
 		}
-		err = b.unwrap()
-	}
-}
-
-func Log(err error, before ...int) {
-	step := 1
-	if len(before) != 0 {
-		step = before[0]
+		return WithoutStack(x.Unwrap())
 	}
 
-	osPath, _ := os.Getwd()
-
-	pc := make([]uintptr, 10)
-	runtime.Callers(1, pc)
-	f := runtime.FuncForPC(pc[1] - 1)
-
-	_, fn, line, _ := runtime.Caller(step)
-	fn = strings.TrimPrefix(fn, osPath)
-	location := fmt.Sprintf("%s %d, %s", fn, line, f.Name())
-
-	t := time.Now()
-
-	// Yellow error color warn
-	yellError := color.New(color.FgYellow).Add(color.Bold)
-
-	// Print the message
-	yellError.Printf("Error:\n")
-	fmt.Printf("Time: %s\n", t.Format("Mon Jan _2 15:04:05 2006"))
-	fmt.Println(err.Error())
-	fmt.Println(location)
+	return err
 }

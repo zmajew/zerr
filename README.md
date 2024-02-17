@@ -1,6 +1,8 @@
 # zerr
 Error forwarding package
 
+![image info](./vs.png)
+
 Example of usage:
 ```
 package main
@@ -10,50 +12,31 @@ import (
 	"fmt"
 
 	"github.com/zmajew/zerr"
+	"log"
 )
 
 // Function where the error happened
 func A() error {
-	// Database returned this error on query with fictional id...
-	err := sql.ErrNoRows
-
-	// Forward the error
-	return zerr.Forward(err)
+	// Database returned this error on query ...
+	return zerr.Forward(sql.ErrNoRows)
 }
 
 // Some middle function
 func B() error {
-	err := A()
-
-	return zerr.Forward(err)
-}
-
-// Add a comment to the passing error
-func C() error {
-	err := B()
-
-	return zerr.ForwardWithMessage(err, "some error message")
+	return zerr.Forward(A())
 }
 
 func main() {
-	err := C()
+	err := B()
 
-	if zerr.GetFirstError(err) == sql.ErrNoRows {
-		// Send the error to the frontend
-		fmt.Println("There is no rows with requested id in the database")
-	}
+	// Send an error to the frontend:
+	fmt.Println(zerr.WithoutStackTrace(err))
 
-	zerr.Log(err)
+	// Log an error with stack trace:
+	log.Fatal(err.Error())
 }
 ```
-Result:
-```
-There is no rows with requested id in database
-Error:
-Time: 2020-06-12 11:20:10.664495491 +0200 CEST m=+0.000205396
-sql: no rows in result set
-/main.go 15, main.A
-/main.go 22, main.B
-some error message: /main.go 28, main.C
-/main.go 39, main.main
-```
+
+I have created this small package like a helper and fund it wary useful since it requires less discipline than logging over the code or introducing distributed tracing, for example Jaeger.
+
+In local VS Code usage and debugging just ctrl+click on the location links and trace the error.
