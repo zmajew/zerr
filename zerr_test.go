@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"zerr"
+
+	"github.com/zmajew/zerr"
 )
 
 func TestForward(t *testing.T) {

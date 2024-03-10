@@ -1,5 +1,5 @@
 # zerr
-Error forwarding package
+Error forwarding with stack trace where it is used.
 
 ![image info](./vs.png)
 
@@ -15,13 +15,13 @@ import (
 	"log"
 )
 
-// Function where the error happened
+// Function where the error happened.
 func A() error {
 	// Database returned this error on query ...
 	return zerr.Forward(sql.ErrNoRows)
 }
 
-// Some middle function
+// Some middle function.
 func B() error {
 	return zerr.Forward(A())
 }
@@ -37,6 +37,4 @@ func main() {
 }
 ```
 
-Have created this small package like a helper and found it wary useful since it requires less discipline than logging over the code or introducing distributed tracing, for example Jaeger.
 
-In local VS Code usage and debugging just ctrl+click on the location links and trace the error.

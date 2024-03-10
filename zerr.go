@@ -10,7 +10,13 @@ type zError struct {
 	err        error
 }
 
+// Error defines zError as error type.
 func (e zError) Error() string {
+	// add last location to stack
+	fileName, line, funcName := location(3)
+	e.stackTrace = append(e.stackTrace, fmt.Sprintf(`{"location": "%s:%d", "function": "%s"}`, fileName, line, funcName))
+
+	// create json error string
 	a := "{"
 	b := fmt.Sprintf(`"error": "%s", `, e.err.Error())
 	c := `"stack_trace": [`
@@ -26,13 +32,11 @@ func (e zError) Error() string {
 	return a + b + c + "}"
 }
 
+// Forward picks stack trace of the error it receives.
 func Forward(err error) error {
 	if err != nil {
-		pc := make([]uintptr, 10)
-		runtime.Callers(1, pc)
-		f := runtime.FuncForPC(pc[1] - 1)
-		_, fn, line, _ := runtime.Caller(1)
-		errorLocation := fmt.Sprintf(`{"location": "%s:%d", "function": "%s"}`, fn, line, f.Name())
+		fileName, line, funcName := location(2)
+		errorLocation := fmt.Sprintf(`{"location": "%s:%d", "function": "%s"}`, fileName, line, funcName)
 
 		zerr, ok := err.(zError)
 		if ok {
@@ -48,13 +52,21 @@ func Forward(err error) error {
 	return nil
 }
 
-// Unwrap adds an unwrap standard error functionality.
+func location(level int) (string, int, string) {
+	pc := make([]uintptr, 10)
+	runtime.Callers(level, pc)
+	f := runtime.FuncForPC(pc[1] - 1)
+	_, fn, line, _ := runtime.Caller(level)
+	return fn, line, f.Name()
+}
+
+// Unwrap adds an unwrap functionality to zError type.
 func (c zError) Unwrap() error {
 	return c.err
 }
 
 // WithoutStack looks for first form backwards zError type an returns its encapsulated error.
-// If does not found zError with Unwrap function will return an error from argument.
+// If zError was not found it will return an error from argument.
 func WithoutStack(err error) error {
 	if ze, ok := err.(zError); ok {
 		return ze.err

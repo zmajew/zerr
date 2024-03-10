@@ -1,3 +1,3 @@
-module zerr
+module github.com/zmajew/zerr
 
-go 1.15
+go 1.20
